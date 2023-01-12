@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <title>sudoku</title>
+    <style>
+        .fab {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            color: white;
+            background-color: lightblue;
+            width: 24px;
+            height: 24px;
+            padding: 12px;
+            border-radius: 24px;
+            user-select: none;
+            cursor: pointer;
+        }
+        .fab:hover {
+            box-shadow: 0 0 5px 2px rgb(127 127 127 / 0.3);
+        }
+    </style>
+</head>
+
+<body style="margin: 0;">
+    <script type="module">
+        import { Reducer, createData, PuzzleIniter } from "./base.js";
+        import { plugin as commonP } from "./commonRule.js";
+        import "./sudoku.js";
+
+        let reducer = new Reducer([commonP[0]]);
+        let initer = new PuzzleIniter([commonP[2]], reducer);
+
+        function loadSudoku() {
+            const sudoku = document.createElement("sudoku-card");
+            sudoku.setReducer(reducer);
+            // sudoku.setAttribute("overlay", "a b c");
+            sudoku.setAttribute("tabindex", -1);
+            let data = createData(reducer);
+            initer.init(data);
+            sudoku.data = data;
+            document.getElementsByTagName('main')[0].innerHTML = '';
+            document.getElementsByTagName('main')[0].appendChild(sudoku);
+        }
+        loadSudoku();
+        document.getElementById('refresh').addEventListener('click', loadSudoku);
+    </script>
+    <main style="display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh;"></main>
+    <div id="refresh" class="fab">
+        <span class="material-symbols-outlined">refresh</span>
+    </div>
+</body>
+
+</html>
