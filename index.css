@@ -87,3 +87,8 @@ nav li:hover,
 .fab:hover {
     background-color: rgb(127 127 127 / 0.25);
 }
+
+a, a:hover, a:visited {
+    color: black;
+    text-decoration: underline dotted;
+}
