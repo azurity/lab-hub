@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Font</title>
+</head>
+
+<body>
+    <style>
+        :root {
+            font-size: 24px;
+            font-family: 'ubuntu mono';
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .svg-text>* {
+            margin: 0 0.125em;
+            line-height: 1.25em;
+        }
+
+        .char {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .char>span {
+            font-size: 0.5em;
+            padding-bottom: 1em;
+        }
+
+        .form {
+            width: 320px;
+            display: inline-grid;
+            grid-template-columns: 80px calc(100% - 88px);
+            align-items: center;
+            gap: 8px;
+            background-color: #eee;
+            padding: 8px;
+        }
+
+        input {
+            height: 20px;
+            outline: none;
+            border: 1px solid rgb(50 50 150);
+            border-radius: 0;
+            background-color: rgb(223, 223, 245);
+        }
+
+        textarea {
+            outline: none;
+            border: 1px solid rgb(50 50 150);
+            border-radius: 0;
+            background-color: rgb(223, 223, 245);
+        }
+
+        summary {
+            user-select: none;
+        }
+
+        .content>* {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h3 {
+            margin: 12px 0;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.4/dist/d3.min.js"></script>
+    <script src="font.js"></script>
+
+    <div class="content">
+        <details>
+            <summary>generate</summary>
+            <input id="text1" placeholder="origin text">
+            <div class="svg-text" id="svg-text1" style="padding-top: 8px;"></div>
+        </details>
+        <details>
+            <summary>per character compare</summary>
+            <input id="text2" placeholder="origin text">
+            <div class="svg-text" id="svg-text2" style="padding-top: 8px; font-size: 64px;"></div>
+        </details>
+        <details>
+            <summary>generate image</summary>
+            <div class="form" style="font-size: 16px;">
+                <label>N/line:</label>
+                <input id="n" placeholder="characters per line">
+                <label>text:</label>
+                <textarea id="textarea" placeholder="origin text"></textarea>
+                <input style="grid-column: 1 / 3; cursor: pointer;" type="button" id="gen" value="generate image">
+            </div>
+        </details>
+    </div>
+    <script>
+
+        document.getElementById('text1').addEventListener('input', (ev) => {
+            const content = document.getElementById('svg-text1');
+            content.innerHTML = "";
+            for (let it of ev.target.value) {
+                const value = it.codePointAt(0);
+                content.appendChild(makeChar(value).node());
+            }
+        });
+
+        document.getElementById('text2').addEventListener('input', (ev) => {
+            const content = document.getElementById('svg-text2');
+            content.innerHTML = "";
+            for (let it of ev.target.value) {
+                const value = it.codePointAt(0);
+                const cp = document.createElement('div');
+                cp.className = "char";
+                cp.appendChild(makeChar(value, true).node());
+                const c = document.createElement('span');
+                c.innerText = it;
+                cp.appendChild(c);
+                content.appendChild(cp);
+            }
+        });
+
+        document.getElementById('gen').addEventListener('click', () => {
+            const N = parseInt(document.getElementById('n').value);
+            if (!Number.isFinite(N)) return;
+            if (N <= 0) return;
+            const text = document.getElementById('textarea').value;
+            const lines = text.split('\n');
+            // [72x80]
+            const svg = d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+
+            let hCount = 0;
+            for (let line of lines) {
+                const g = d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
+                g.attr('transform', `translate(0,${80 * hCount})`);
+                let localCount = 0;
+                let n = 0;
+                for (let it of line) {
+                    if (Math.floor(n / N) > localCount)
+                        localCount += 1;
+                    const value = it.codePointAt(0);
+                    const c = g.append('g').attr('transform', `translate(${72 * (n % N) + 4},${80 * localCount + 4})`);
+                    makeCharImpl(c, value);
+                    n += 1;
+                }
+                localCount += 1;
+                hCount += localCount;
+                svg.node().appendChild(g.node());
+            }
+
+            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('viewBox', `0 0 ${72 * N} ${80 * hCount}`);
+
+            const blob = new Blob([svg.node().outerHTML], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'image.svg';
+            a.click();
+        });
+    </script>
+</body>
+
+</html>

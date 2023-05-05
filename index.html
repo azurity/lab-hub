@@ -18,6 +18,10 @@
     <script src="index.js"></script>
     <nav>
         <ul>
+            <li data-aim="pages/projects.html" onclick="open_lab_item(event)">
+                <span class="icon material-symbols-outlined">home</span>
+                <span>projects</span>
+            </li>
             <li data-aim="pages/game-design-wiki.html" onclick="open_lab_item(event)">
                 <span class="icon material-symbols-outlined">description</span>
                 <span>game design wiki</span>
@@ -46,6 +50,13 @@
                     <span class="material-symbols-outlined">open_in_new</span>
                 </div>
             </li>
+            <li data-aim="pages/game-font/" onclick="open_lab_item(event)">
+                <span class="icon material-symbols-outlined">draw</span>
+                <span>game font generator</span>
+                <div class="fab" onclick="open_in_new(event)">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </div>
+            </li>
             <!-- <li data-aim=":url-here:" onclick="open_lab_item(event)">
                 <span class="icon material-symbols-outlined">extension</span>
                 <span>test</span>
@@ -55,7 +66,7 @@
             </li> -->
         </ul>
     </nav>
-    <iframe id="main" src="">
+    <iframe id="main" src="pages/projects.html">
 </body>
 
 </html>
