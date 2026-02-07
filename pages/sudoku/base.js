@@ -121,7 +121,7 @@ export class Solver {
         }
         for (let it of cases) {
             data.data[checked[0]][checked[1]].data = it;
-            let ret = this.solve(data, all);
+            let ret = this.solve(data, all, rand);
             if (ret[0] != 0) {
                 if (!all) {
                     return ret;
