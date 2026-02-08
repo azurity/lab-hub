@@ -39,11 +39,12 @@
         import { plugin as commonP } from "./commonRule.js";
         import "./sudoku.js";
 
-        let reducer = new Reducer([commonP[0]]);
-        let initer = new PuzzleIniter([commonP[2]], reducer);
+        let reducer = new Reducer([commonP[0]], [3, 3]);
+        let initer = new PuzzleIniter([commonP[2]], reducer, 0);
 
         function loadSudoku() {
             const sudoku = document.createElement("sudoku-card");
+            sudoku.init(reducer.size);
             sudoku.id = 'sudoku';
             sudoku.setReducer(reducer);
             // sudoku.setAttribute("overlay", "a b c");
@@ -68,19 +69,50 @@
             document.getElementById('overlay').firstElementChild.innerHTML = (overlay ? 'layers' : 'layers_clear');
             document.getElementById('sudoku').setOverlay(overlay);
         });
+        function updateBackground(dark) {
+            document.body.style.background = dark ? '#1e1e1e' : 'white';
+        }
+        let dark = false;
+        document.getElementById('theme').addEventListener('click', () => {
+            dark = !dark;
+            document.getElementById('theme').firstElementChild.innerHTML = (dark ? 'dark_mode' : 'light_mode');
+            document.getElementById('sudoku').setTheme(dark);
+            updateBackground(dark);
+        });
+        updateBackground(dark);
+        let hexMode = false;
+        document.getElementById('hex').addEventListener('click', () => {
+            hexMode = !hexMode;
+            document.getElementById('hex').firstElementChild.innerHTML = (hexMode ? 'grid_4x4' : 'grid_3x3');
+            reducer.size = hexMode ? [4, 4] : [3, 3];
+            initer.limit = hexMode ? 127 : 0;
+            loadSudoku();
+        });
     </script>
     <main style="display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh;"></main>
     <div class="fab-list">
-        <div id="showError" class="fab">
+        <div id="theme" class="fab" title="light/dark">
+            <span class="material-symbols-outlined">light_mode</span>
+        </div>
+        <div id="hex" class="fab" title="3x3/4x4">
+            <span class="material-symbols-outlined">grid_3x3</span>
+        </div>
+        <div id="showError" class="fab" title="show failures immediately">
             <span class="material-symbols-outlined">visibility_off</span>
         </div>
-        <div id="overlay" class="fab">
+        <div id="overlay" class="fab" title="mark on/off">
             <span class="material-symbols-outlined">layers_clear</span>
         </div>
-        <div id="refresh" class="fab">
+        <div id="refresh" class="fab" title="refresh">
             <span class="material-symbols-outlined">refresh</span>
         </div>
     </div>
+    <pre style="margin: 0; position: fixed; top: 16px; left: 16px; font-size: 16px; font: 'ubuntu mono', menlo, consolas; color: gray;">
+<span style="font-weight: bolder;">&lt;num&gt;</span> set number
+<span style="font-weight: bolder;">CTRL+&lt;num&gt;</span> mini mark
+<span style="font-weight: bolder;">ALT+&lt;num&gt;</span> central mark
+<span style="font-weight: bolder;">double click</span> highlight the number
+    </pre>
 </body>
 
 </html>

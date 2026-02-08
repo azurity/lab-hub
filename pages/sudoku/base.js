@@ -5,15 +5,15 @@ class CellData {
         } else if (data instanceof Array) {
             this.data = new Set(data);
         } else {
-            this.data = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+            this.data = null;
         }
         this.isStatic = false;
         this.wrong = false;
     }
 
-    toString() {
+    toString(alphabet) {
         if (typeof this.data === 'number') {
-            return this.data.toString();
+            return alphabet[this.data - 1];
         } else {
             return "";
         }
@@ -32,12 +32,14 @@ class CellData {
 }
 
 export class BoardData {
-    constructor() {
+    constructor(size) {
+        this.size = size;
+        this.fullSize = size[0] * size[1];
         let data = [];
-        for (let y = 0; y < 9; y++) {
+        for (let y = 0; y < this.fullSize; y++) {
             let line = [];
-            for (let x = 0; x < 9; x++) {
-                line.push(new CellData(null));
+            for (let x = 0; x < this.fullSize; x++) {
+                line.push(new CellData(Array.from(new Array(this.fullSize), (_, index) => index+1)));
             }
             data.push(line);
         }
@@ -45,9 +47,9 @@ export class BoardData {
     }
 
     clone() {
-        let ret = new BoardData();
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
+        let ret = new BoardData(this.size);
+        for (let r = 0; r < this.fullSize; r++) {
+            for (let c = 0; c < this.fullSize; c++) {
                 ret.data[r][c] = this.data[r][c].clone();
             }
         }
@@ -56,16 +58,17 @@ export class BoardData {
 }
 
 export class Reducer {
-    constructor(rules) {
+    constructor(rules, size) {
         if (rules.length === 0) {
             throw "at least one rule";
         }
         this.rules = [...rules];
+        this.size = size;
     }
 
     reduce(data) {
         for (let r of this.rules) {
-            if (!r(data)) {
+            if (!r(this.size)(data)) {
                 return false;
             }
         }
@@ -86,10 +89,11 @@ export class Solver {
             throw "wrong data";
         }
         // step 0: fill
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
+        const size = this.reducer.size[0] * this.reducer.size[1];
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
                 if (typeof data.data[r][c].data !== 'number') {
-                    data.data[r][c].data = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                    data.data[r][c].data = new Set(Array.from(new Array(size), (_, index) => index+1));
                 }
             }
         }
@@ -99,8 +103,8 @@ export class Solver {
         }
         // step 2: find muttable cells
         let slot = [];
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
                 if (typeof data.data[r][c].data !== 'number') {
                     slot.push([r, c, data.data[r][c].data.size]);
                 }
@@ -125,6 +129,8 @@ export class Solver {
             if (ret[0] != 0) {
                 if (!all) {
                     return ret;
+                } else if (count > 1) {
+                    break;
                 } else {
                     count += ret[0];
                 }
@@ -138,21 +144,22 @@ export class Solver {
 export function createData(reducer) {
     if (!(reducer instanceof Reducer)) return;
     let solver = new Solver(reducer);
-    let [_, result] = solver.solve(new BoardData(), false, true);
+    let [_, result] = solver.solve(new BoardData(reducer.size), false, true);
     return result;
 }
 
 export class PuzzleIniter {
-    constructor(initers, reducer) {
+    constructor(initers, reducer, limit) {
         this.initers = initers;
         this.reducer = reducer;
+        this.limit = limit;
     }
 
     init(data) {
         if (!(data instanceof BoardData)) return;
         let solver = new Solver(this.reducer);
         for (let i = this.initers.length - 1; i >= 0; i--) {
-            if (!this.initers[i](data, solver)) {
+            if (!this.initers[i](this.reducer.size)(data, solver, this.limit)) {
                 return false;
             }
         }
