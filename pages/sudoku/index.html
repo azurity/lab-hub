@@ -42,21 +42,25 @@
         let reducer = new Reducer([commonP[0]], [3, 3]);
         let initer = new PuzzleIniter([commonP[2]], reducer, 0);
 
-        function loadSudoku() {
+        function loadSudoku(archive) {
+            let data = createData(reducer);
+            initer.init(data);
+            if (archive != null) {
+                data.load(archive);
+                reducer.size = data.size;
+            }
             const sudoku = document.createElement("sudoku-card");
             sudoku.init(reducer.size);
             sudoku.id = 'sudoku';
             sudoku.setReducer(reducer);
             // sudoku.setAttribute("overlay", "a b c");
             sudoku.setAttribute("tabindex", -1);
-            let data = createData(reducer);
-            initer.init(data);
             sudoku.data = data;
             document.getElementsByTagName('main')[0].innerHTML = '';
             document.getElementsByTagName('main')[0].appendChild(sudoku);
         }
-        loadSudoku();
-        document.getElementById('refresh').addEventListener('click', loadSudoku);
+        loadSudoku(new URL(document.location.href).searchParams.get('archive'));
+        document.getElementById('refresh').addEventListener('click', () => loadSudoku());
         let showError = false;
         document.getElementById('showError').addEventListener('click', () => {
             showError = !showError;
@@ -88,6 +92,18 @@
             initer.limit = hexMode ? 127 : 0;
             loadSudoku();
         });
+        document.getElementById('save').addEventListener('click', () => {
+            const data = document.getElementsByTagName('sudoku-card')[0].data.save(false);
+            navigator.clipboard.writeText(`https://azurity.run/lab-hub/pages/sudoku/?archive=${data}`).then(() => {
+                alert('copied to clipboard');
+            });
+        });
+        document.getElementById('share').addEventListener('click', () => {
+            const data = document.getElementsByTagName('sudoku-card')[0].data.save(true);
+            navigator.clipboard.writeText(`https://azurity.run/lab-hub/pages/sudoku/?archive=${data}`).then(() => {
+                alert('copied to clipboard');
+            });
+        });
     </script>
     <main style="display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh;"></main>
     <div class="fab-list">
@@ -105,6 +121,12 @@
         </div>
         <div id="refresh" class="fab" title="refresh">
             <span class="material-symbols-outlined">refresh</span>
+        </div>
+        <div id="save" class="fab" title="save">
+            <span class="material-symbols-outlined">save</span>
+        </div>
+        <div id="share" class="fab" title="save">
+            <span class="material-symbols-outlined">share</span>
         </div>
     </div>
     <pre style="margin: 0; position: fixed; top: 16px; left: 16px; font-size: 16px; font: 'ubuntu mono', menlo, consolas; color: gray;">

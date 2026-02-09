@@ -55,6 +55,90 @@ export class BoardData {
         }
         return ret;
     }
+
+    save(clear) {
+        const bits = Math.ceil(Math.log2(this.fullSize));
+        const mBits = (clear ? 1 : 2);
+        const bytes = Math.ceil(bits * this.fullSize * this.fullSize / 8);
+        const buffer = new Uint8Array(1 + bytes + Math.ceil(mBits * this.fullSize * this.fullSize / 8));
+        buffer[0] = ((clear ? 1 : 0) | this.size[0] << 1 | this.size[1] << 4);
+        let base = 0;
+        for (let r = 0; r < this.fullSize; r++) {
+            for (let c = 0; c < this.fullSize; c++) {
+                let data = 0;
+                let mask = (this.data[r][c].isStatic ? 1 : 0);
+                if (typeof this.data[r][c].data === 'number') {
+                    data = this.data[r][c].data - 1;
+                    const cell = this.data[r][c];
+                    if (!clear) {
+                        mask = (cell.wrong ? 3 : (cell.isStatic ? 1: 2));
+                    }
+                }
+                const index = Math.floor((base * bits) / 8) + 1;
+                const subBase = (base * bits) % 8;
+                buffer[index] = buffer[index] | ((data << subBase) & 0xff);
+                if (subBase + bits > 8) {
+                    buffer[index + 1] = buffer[index + 1] | ((data >> (8 - subBase)) & 0xff);
+                }
+                const mIndex = Math.floor((base * mBits) / 8) + 1 + bytes;
+                const mSubBase = (base * mBits) % 8;
+                buffer[mIndex] = buffer[mIndex] | ((mask << mSubBase) & 0xff);
+                if (mSubBase + mBits > 8) {
+                    buffer[mIndex + 1] = buffer[mIndex + 1] | ((mask >> (8 - mSubBase)) & 0xff);
+                }
+                base += 1;
+            }
+        }
+        return buffer.toBase64({ alphabet: "base64url" });
+    }
+
+    load(raw) {
+        let buffer = new Uint8Array(raw.length * 3 / 4);
+        buffer.setFromBase64(raw);
+        const clear = (buffer[0] & 0x01) != 0;
+        this.size = [(buffer[0] >> 1) & 0x07, (buffer[0] >> 4) & 0x07];
+        this.fullSize = this.size[0] * this.size[1];
+        let data = [];
+        for (let y = 0; y < this.fullSize; y++) {
+            let line = [];
+            for (let x = 0; x < this.fullSize; x++) {
+                line.push(new CellData(Array.from(new Array(this.fullSize), (_, index) => index+1)));
+            }
+            data.push(line);
+        }
+        this.data = data;
+        const bits = Math.ceil(Math.log2(this.fullSize));
+        const mBits = (clear ? 1 : 2);
+        const bytes = Math.ceil(bits * this.fullSize * this.fullSize / 8);
+        let base = 0;
+        for (let r = 0; r < this.fullSize; r++) {
+            for (let c = 0; c < this.fullSize; c++) {
+                const mIndex = Math.floor((base * mBits) / 8) + 1 + bytes;
+                const mSubBase = (base * mBits) % 8;
+                let mask = buffer[mIndex] >> mSubBase;
+                if (mSubBase + mBits > 8) {
+                    mask = mask | (buffer[mIndex + 1] << (8 - mSubBase));
+                }
+                mask = mask & ((1 << mBits) - 1)
+                if (mask != 0) {
+                    const index = Math.floor((base * bits) / 8) + 1;
+                    const subBase = (base * bits) % 8;
+                    let data = buffer[index] >> subBase;
+                    if (subBase + bits > 8) {
+                        data = data | (buffer[index + 1] << (8 - subBase));
+                    }
+                    data = data & ((1 << bits) - 1);
+                    this.data[r][c].data = data + 1;
+                    if (mask == 1) {
+                        this.data[r][c].isStatic = true;
+                    } else if (mask == 3) {
+                        this.data[r][c].wrong = true;
+                    }
+                }
+                base += 1;
+            }
+        }
+    }
 }
 
 export class Reducer {
