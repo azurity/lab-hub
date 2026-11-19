@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <title>mine sweeper</title>
+    <style>
+        .fab-list {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .fab {
+            color: white;
+            background-color: lightblue;
+            width: 24px;
+            height: 24px;
+            padding: 12px;
+            border-radius: 24px;
+            user-select: none;
+            cursor: pointer;
+        }
+        .fab:hover {
+            box-shadow: 0 0 5px 2px rgb(127 127 127 / 0.3);
+        }
+    </style>
+</head>
+
+<body style="margin: 0;">
+    <script type="module">
+        import "./minesweeper.js";
+        import { QuadMatrix } from "./base.js";
+
+        function loadMineSweeper() {
+            const mineSweeper = document.createElement("mine-sweeper");
+            mineSweeper.setAttribute('width', 15);
+            mineSweeper.setAttribute('height', 15);
+            mineSweeper.setAttribute('bombs', 40);
+            mineSweeper.init(QuadMatrix);
+            document.getElementsByTagName('main')[0].innerHTML = '';
+            document.getElementsByTagName('main')[0].appendChild(mineSweeper);
+        }
+        loadMineSweeper();
+
+        document.getElementById('refresh').addEventListener('click', () => loadMineSweeper());
+    </script>
+    <main style="display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh;"></main>
+    <div class="fab-list">
+        <div id="refresh" class="fab" title="refresh">
+            <span class="material-symbols-outlined">refresh</span>
+        </div>
+    </div>
+</body>
+
+</html>
